@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unit 3 Week 2 Prove It | Similarity</title>
+<title>Unit 3 Week 2 Prove It | Similarity Reasoning</title>
 <style>
 body{font-family:Arial,sans-serif;background:#f6f9fb;color:#1f2933;margin:0;line-height:1.6}
-.wrap{max-width:920px;margin:auto;padding:24px}
+.wrap{max-width:960px;margin:auto;padding:24px}
 .hero{background:#0f2d44;color:white;padding:24px;border-radius:12px}
 .card{background:white;border-left:6px solid #2f80a8;padding:20px;margin-top:18px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .green{border-left-color:#3ca65c;background:#eefaf1}
@@ -14,7 +14,8 @@ body{font-family:Arial,sans-serif;background:#f6f9fb;color:#1f2933;margin:0;line
 button{background:#0f2d44;color:white;border:0;border-radius:8px;padding:12px 18px;font-size:16px;cursor:pointer;margin:6px}
 button:hover{background:#174766}
 .choice{display:block;width:100%;text-align:left;background:#2f80a8;margin:8px 0}
-input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max-width:260px;width:90%}
+input,textarea,select{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;width:95%;max-width:620px}
+textarea{min-height:90px}
 .hidden{display:none}
 .feedback{font-weight:bold;margin-top:12px}
 .correct{color:#227a3b}
@@ -23,6 +24,7 @@ input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max
 .code{font-size:30px;font-weight:bold;color:#0f2d44;letter-spacing:2px}
 .bar{height:18px;background:#d6e6ef;border-radius:10px;overflow:hidden;margin-top:12px}
 .fill{height:100%;background:#3ca65c;width:0%}
+.summary{text-align:left;background:white;border:1px solid #d6e6ef;border-radius:8px;padding:14px;margin-top:14px}
 </style>
 </head>
 
@@ -30,12 +32,12 @@ input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max
 <div class="wrap">
   <div class="hero">
     <h1>Geometry | Unit 3 | Week 2</h1>
-    <p>Prove It! — Applying Similarity & Proportional Reasoning</p>
+    <p>Prove It! — Similarity Reasoning Task</p>
   </div>
 
   <div id="start" class="card">
     <h2>Start Your Prove It</h2>
-    <p>Enter your first and last name. You must answer all 5 randomly generated questions correctly to unlock your completion code.</p>
+    <p>Enter your first and last name. You will answer 5 questions and explain your reasoning. Your completion code appears only after all answers are correct and each explanation is complete.</p>
     <input id="studentName" placeholder="First and last name">
     <br>
     <button onclick="startActivity()">Start</button>
@@ -56,7 +58,8 @@ input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max
     <p><strong>Completed:</strong> <span id="completeTime"></span></p>
     <p><strong>Verification Code:</strong></p>
     <p class="code" id="code"></p>
-    <p>Take a screenshot of this page and submit it in Canvas.</p>
+    <p>Take a screenshot of this page and submit it in Canvas. Make sure your reasoning summary is visible.</p>
+    <div id="reasoningSummary" class="summary"></div>
   </div>
 </div>
 
@@ -64,6 +67,7 @@ input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max
 let student = "";
 let questions = [];
 let current = 0;
+let responses = [];
 
 function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
@@ -74,7 +78,9 @@ function startActivity(){
     document.getElementById("nameError").textContent = "Please enter your first and last name.";
     return;
   }
+
   current = 0;
+  responses = [];
   questions = [
     similarityStatement(),
     similarityRule(),
@@ -82,6 +88,7 @@ function startActivity(){
     perimeterProblem(),
     areaProblem()
   ];
+
   document.getElementById("start").classList.add("hidden");
   document.getElementById("completion").classList.add("hidden");
   document.getElementById("quiz").classList.remove("hidden");
@@ -101,25 +108,52 @@ function showQuestion(){
   document.getElementById("questionBox").innerHTML = q.html;
 }
 
-function check(value){
-  const q = questions[current];
-  const fb = document.getElementById("feedback");
-  if(String(value).trim().toUpperCase() === String(q.answer).trim().toUpperCase()){
-    fb.textContent = "Correct!";
-    fb.className = "feedback correct";
-    setTimeout(() => {
-      current++;
-      if(current >= 5){ showCompletion(); }
-      else { showQuestion(); }
-    }, 800);
-  } else {
-    fb.textContent = "Try again. Check corresponding parts, rules, or scale factor carefully.";
-    fb.className = "feedback wrong";
-  }
+function getSelectedAnswer(){
+  const selected = document.querySelector("input[name='answerChoice']:checked");
+  return selected ? selected.value : "";
 }
 
-function checkInput(){
-  check(document.getElementById("studentAnswer").value);
+function checkCurrent(){
+  const q = questions[current];
+  const fb = document.getElementById("feedback");
+  const answerInput = document.getElementById("answerInput");
+  const explanationInput = document.getElementById("explanationInput");
+
+  const answer = q.kind === "choice" ? getSelectedAnswer() : answerInput.value.trim();
+  const explanation = explanationInput.value.trim();
+
+  if(!answer){
+    fb.textContent = "Please enter or select an answer.";
+    fb.className = "feedback wrong";
+    return;
+  }
+
+  if(explanation.length < 25){
+    fb.textContent = "Please explain your reasoning in at least one complete sentence.";
+    fb.className = "feedback wrong";
+    return;
+  }
+
+  if(!q.check(answer)){
+    fb.textContent = "The answer is not correct yet. Recheck the math or matching.";
+    fb.className = "feedback wrong";
+    return;
+  }
+
+  responses.push({
+    title: q.title,
+    answer: answer,
+    explanation: explanation
+  });
+
+  fb.textContent = "Correct answer and explanation recorded!";
+  fb.className = "feedback correct";
+
+  setTimeout(() => {
+    current++;
+    if(current >= 5){ showCompletion(); }
+    else { showQuestion(); }
+  }, 900);
 }
 
 function similarityStatement(){
@@ -138,12 +172,17 @@ function similarityStatement(){
     `△${left} ~ △${s[1][0]}${s[1][2]}${s[1][1]}`,
     `△${s[0][2]}${s[0][1]}${s[0][0]} ~ △${right}`
   ]);
+
   return {
     title:"Question 1: Similarity Statement",
-    answer:correct,
-    html:`<p>${s[0][0]} ↔ ${s[1][0]}, ${s[0][1]} ↔ ${s[1][1]}, and ${s[0][2]} ↔ ${s[1][2]}.</p>
+    kind:"choice",
+    check:v => v === correct,
+    html:`<p><strong>Given:</strong> ${s[0][0]} ↔ ${s[1][0]}, ${s[0][1]} ↔ ${s[1][1]}, and ${s[0][2]} ↔ ${s[1][2]}.</p>
           <p>Choose the correct similarity statement.</p>
-          ${choices.map(c=>`<button class="choice" onclick="check('${c}')">${c}</button>`).join("")}`
+          ${choices.map(c=>`<label class="choice"><input type="radio" name="answerChoice" value="${c}"> ${c}</label>`).join("")}
+          <p><strong>Explain:</strong> How do you know the vertices are in the correct order?</p>
+          <textarea id="explanationInput" placeholder="Explain how the corresponding vertices match."></textarea>
+          <br><button onclick="checkCurrent()">Submit Answer and Explanation</button>`
   };
 }
 
@@ -154,14 +193,19 @@ function similarityRule(){
     ["Two pairs of corresponding sides are proportional and the included angles are congruent.","SAS"]
   ];
   const c = rand(cases);
+
   return {
     title:"Question 2: Triangle Similarity Rule",
-    answer:c[1],
-    html:`<p>${c[0]}</p>
+    kind:"choice",
+    check:v => v === c[1],
+    html:`<p><strong>Evidence:</strong> ${c[0]}</p>
           <p>Which similarity rule proves the triangles are similar?</p>
-          <button onclick="check('AA')">AA</button>
-          <button onclick="check('SAS')">SAS</button>
-          <button onclick="check('SSS')">SSS</button>`
+          <label class="choice"><input type="radio" name="answerChoice" value="AA"> AA Similarity</label>
+          <label class="choice"><input type="radio" name="answerChoice" value="SAS"> SAS Similarity</label>
+          <label class="choice"><input type="radio" name="answerChoice" value="SSS"> SSS Similarity</label>
+          <p><strong>Explain:</strong> Why does that rule match the evidence?</p>
+          <textarea id="explanationInput" placeholder="Explain why AA, SAS, or SSS applies."></textarea>
+          <br><button onclick="checkCurrent()">Submit Answer and Explanation</button>`
   };
 }
 
@@ -171,13 +215,17 @@ function indirectMeasurement(){
   const scale = rand([3,4,5]);
   const objectShadow = shadow * scale;
   const answer = person * scale;
+
   return {
     title:"Question 3: Indirect Measurement",
-    answer:String(answer),
+    kind:"number",
+    check:v => Math.abs(parseFloat(v)-answer) < 0.001,
     html:`<p>A ${person}-foot person casts a ${shadow}-foot shadow. At the same time, a tree casts a ${objectShadow}-foot shadow.</p>
           <p>How tall is the tree?</p>
-          <input id="studentAnswer" type="number" placeholder="tree height">
-          <button onclick="checkInput()">Check</button>`
+          <input id="answerInput" type="number" placeholder="Tree height">
+          <p><strong>Explain:</strong> What proportion or scale factor did you use, and why?</p>
+          <textarea id="explanationInput" placeholder="Explain your proportion or scale factor."></textarea>
+          <br><button onclick="checkCurrent()">Submit Answer and Explanation</button>`
   };
 }
 
@@ -185,13 +233,17 @@ function perimeterProblem(){
   const p = rand([12,15,18,20,24,30]);
   const k = rand([2,3,4]);
   const answer = p * k;
+
   return {
     title:"Question 4: Perimeter of Similar Figures",
-    answer:String(answer),
+    kind:"number",
+    check:v => Math.abs(parseFloat(v)-answer) < 0.001,
     html:`<p>A figure has perimeter ${p}. A similar figure has side lengths ${k} times as long.</p>
           <p>What is the new perimeter?</p>
-          <input id="studentAnswer" type="number" placeholder="new perimeter">
-          <button onclick="checkInput()">Check</button>`
+          <input id="answerInput" type="number" placeholder="New perimeter">
+          <p><strong>Explain:</strong> Why does perimeter change by the scale factor?</p>
+          <textarea id="explanationInput" placeholder="Explain why perimeter is multiplied by k."></textarea>
+          <br><button onclick="checkCurrent()">Submit Answer and Explanation</button>`
   };
 }
 
@@ -199,16 +251,18 @@ function areaProblem(){
   const a = rand([8,10,12,15,20]);
   const k = rand([2,3,4]);
   const answer = a * k * k;
+
   return {
     title:"Question 5: Area of Similar Figures",
-    answer:String(answer),
+    kind:"number",
+    check:v => Math.abs(parseFloat(v)-answer) < 0.001,
     html:`<p>A figure has area ${a}. A similar figure has side lengths ${k} times as long.</p>
           <p>What is the new area?</p>
-          <input id="studentAnswer" type="number" placeholder="new area">
-          <button onclick="checkInput()">Check</button>
-          <div class="yellow" style="padding:12px;border-radius:8px;margin-top:12px;">
-            Hint: Area changes by k².
-          </div>`
+          <input id="answerInput" type="number" placeholder="New area">
+          <div class="yellow" style="padding:12px;border-radius:8px;margin-top:12px;">Hint: Area changes by k².</div>
+          <p><strong>Explain:</strong> Why do you use k² instead of k for area?</p>
+          <textarea id="explanationInput" placeholder="Explain why area scales by k squared."></textarea>
+          <br><button onclick="checkCurrent()">Submit Answer and Explanation</button>`
   };
 }
 
@@ -218,6 +272,14 @@ function showCompletion(){
   document.getElementById("completeName").textContent = student;
   document.getElementById("completeTime").textContent = new Date().toLocaleString();
   document.getElementById("code").textContent = makeCode();
+
+  let html = "<h3>Reasoning Summary</h3>";
+  responses.forEach((r,i)=>{
+    html += `<p><strong>${i+1}. ${r.title}</strong><br>
+             <strong>Answer:</strong> ${escapeHTML(r.answer)}<br>
+             <strong>Explanation:</strong> ${escapeHTML(r.explanation)}</p>`;
+  });
+  document.getElementById("reasoningSummary").innerHTML = html;
 }
 
 function makeCode(){
@@ -225,6 +287,15 @@ function makeCode(){
   let code = "U3W2-";
   for(let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
   return code;
+}
+
+function escapeHTML(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 </script>
 </body>
