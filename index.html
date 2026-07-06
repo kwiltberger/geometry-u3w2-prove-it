@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 3 Week 2 Prove It | Similarity</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f6f9fb;color:#1f2933;margin:0;line-height:1.6}
+.wrap{max-width:920px;margin:auto;padding:24px}
+.hero{background:#0f2d44;color:white;padding:24px;border-radius:12px}
+.card{background:white;border-left:6px solid #2f80a8;padding:20px;margin-top:18px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.green{border-left-color:#3ca65c;background:#eefaf1}
+.yellow{border-left-color:#f2b705;background:#fff8e6}
+button{background:#0f2d44;color:white;border:0;border-radius:8px;padding:12px 18px;font-size:16px;cursor:pointer;margin:6px}
+button:hover{background:#174766}
+.choice{display:block;width:100%;text-align:left;background:#2f80a8;margin:8px 0}
+input{padding:10px;border:1px solid #b8c7d1;border-radius:6px;font-size:16px;max-width:260px;width:90%}
+.hidden{display:none}
+.feedback{font-weight:bold;margin-top:12px}
+.correct{color:#227a3b}
+.wrong{color:#b42318}
+.complete{background:#eefaf1;border:3px solid #3ca65c;text-align:center;padding:24px;border-radius:14px;margin-top:18px}
+.code{font-size:30px;font-weight:bold;color:#0f2d44;letter-spacing:2px}
+.bar{height:18px;background:#d6e6ef;border-radius:10px;overflow:hidden;margin-top:12px}
+.fill{height:100%;background:#3ca65c;width:0%}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Geometry | Unit 3 | Week 2</h1>
+    <p>Prove It! — Applying Similarity & Proportional Reasoning</p>
+  </div>
+
+  <div id="start" class="card">
+    <h2>Start Your Prove It</h2>
+    <p>Enter your first and last name. You must answer all 5 randomly generated questions correctly to unlock your completion code.</p>
+    <input id="studentName" placeholder="First and last name">
+    <br>
+    <button onclick="startActivity()">Start</button>
+    <p id="nameError" class="feedback wrong"></p>
+  </div>
+
+  <div id="quiz" class="card hidden">
+    <h2 id="title"></h2>
+    <p><strong>Progress:</strong> <span id="progressText"></span></p>
+    <div class="bar"><div id="fill" class="fill"></div></div>
+    <div id="questionBox"></div>
+    <p id="feedback" class="feedback"></p>
+  </div>
+
+  <div id="completion" class="complete hidden">
+    <h2>Unit 3 Week 2 Prove It Complete</h2>
+    <p><strong>Student:</strong> <span id="completeName"></span></p>
+    <p><strong>Completed:</strong> <span id="completeTime"></span></p>
+    <p><strong>Verification Code:</strong></p>
+    <p class="code" id="code"></p>
+    <p>Take a screenshot of this page and submit it in Canvas.</p>
+  </div>
+</div>
+
+<script>
+let student = "";
+let questions = [];
+let current = 0;
+
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
+
+function startActivity(){
+  student = document.getElementById("studentName").value.trim();
+  if(student.split(" ").length < 2){
+    document.getElementById("nameError").textContent = "Please enter your first and last name.";
+    return;
+  }
+  current = 0;
+  questions = [
+    similarityStatement(),
+    similarityRule(),
+    indirectMeasurement(),
+    perimeterProblem(),
+    areaProblem()
+  ];
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("completion").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  showQuestion();
+}
+
+function updateProgress(){
+  document.getElementById("progressText").textContent = `Question ${current + 1} of 5`;
+  document.getElementById("fill").style.width = `${(current/5)*100}%`;
+}
+
+function showQuestion(){
+  updateProgress();
+  document.getElementById("feedback").textContent = "";
+  const q = questions[current];
+  document.getElementById("title").textContent = q.title;
+  document.getElementById("questionBox").innerHTML = q.html;
+}
+
+function check(value){
+  const q = questions[current];
+  const fb = document.getElementById("feedback");
+  if(String(value).trim().toUpperCase() === String(q.answer).trim().toUpperCase()){
+    fb.textContent = "Correct!";
+    fb.className = "feedback correct";
+    setTimeout(() => {
+      current++;
+      if(current >= 5){ showCompletion(); }
+      else { showQuestion(); }
+    }, 800);
+  } else {
+    fb.textContent = "Try again. Check corresponding parts, rules, or scale factor carefully.";
+    fb.className = "feedback wrong";
+  }
+}
+
+function checkInput(){
+  check(document.getElementById("studentAnswer").value);
+}
+
+function similarityStatement(){
+  const sets = [
+    [["A","B","C"],["D","E","F"]],
+    [["L","M","N"],["P","Q","R"]],
+    [["R","S","T"],["X","Y","Z"]]
+  ];
+  const s = rand(sets);
+  const left = s[0].join("");
+  const right = s[1].join("");
+  const correct = `△${left} ~ △${right}`;
+  const choices = shuffle([
+    correct,
+    `△${s[0][1]}${s[0][0]}${s[0][2]} ~ △${right}`,
+    `△${left} ~ △${s[1][0]}${s[1][2]}${s[1][1]}`,
+    `△${s[0][2]}${s[0][1]}${s[0][0]} ~ △${right}`
+  ]);
+  return {
+    title:"Question 1: Similarity Statement",
+    answer:correct,
+    html:`<p>${s[0][0]} ↔ ${s[1][0]}, ${s[0][1]} ↔ ${s[1][1]}, and ${s[0][2]} ↔ ${s[1][2]}.</p>
+          <p>Choose the correct similarity statement.</p>
+          ${choices.map(c=>`<button class="choice" onclick="check('${c}')">${c}</button>`).join("")}`
+  };
+}
+
+function similarityRule(){
+  const cases = [
+    ["Two pairs of corresponding angles are congruent.","AA"],
+    ["All three pairs of corresponding sides are proportional.","SSS"],
+    ["Two pairs of corresponding sides are proportional and the included angles are congruent.","SAS"]
+  ];
+  const c = rand(cases);
+  return {
+    title:"Question 2: Triangle Similarity Rule",
+    answer:c[1],
+    html:`<p>${c[0]}</p>
+          <p>Which similarity rule proves the triangles are similar?</p>
+          <button onclick="check('AA')">AA</button>
+          <button onclick="check('SAS')">SAS</button>
+          <button onclick="check('SSS')">SSS</button>`
+  };
+}
+
+function indirectMeasurement(){
+  const person = rand([4,5,6]);
+  const shadow = rand([6,8,9]);
+  const scale = rand([3,4,5]);
+  const objectShadow = shadow * scale;
+  const answer = person * scale;
+  return {
+    title:"Question 3: Indirect Measurement",
+    answer:String(answer),
+    html:`<p>A ${person}-foot person casts a ${shadow}-foot shadow. At the same time, a tree casts a ${objectShadow}-foot shadow.</p>
+          <p>How tall is the tree?</p>
+          <input id="studentAnswer" type="number" placeholder="tree height">
+          <button onclick="checkInput()">Check</button>`
+  };
+}
+
+function perimeterProblem(){
+  const p = rand([12,15,18,20,24,30]);
+  const k = rand([2,3,4]);
+  const answer = p * k;
+  return {
+    title:"Question 4: Perimeter of Similar Figures",
+    answer:String(answer),
+    html:`<p>A figure has perimeter ${p}. A similar figure has side lengths ${k} times as long.</p>
+          <p>What is the new perimeter?</p>
+          <input id="studentAnswer" type="number" placeholder="new perimeter">
+          <button onclick="checkInput()">Check</button>`
+  };
+}
+
+function areaProblem(){
+  const a = rand([8,10,12,15,20]);
+  const k = rand([2,3,4]);
+  const answer = a * k * k;
+  return {
+    title:"Question 5: Area of Similar Figures",
+    answer:String(answer),
+    html:`<p>A figure has area ${a}. A similar figure has side lengths ${k} times as long.</p>
+          <p>What is the new area?</p>
+          <input id="studentAnswer" type="number" placeholder="new area">
+          <button onclick="checkInput()">Check</button>
+          <div class="yellow" style="padding:12px;border-radius:8px;margin-top:12px;">
+            Hint: Area changes by k².
+          </div>`
+  };
+}
+
+function showCompletion(){
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("completion").classList.remove("hidden");
+  document.getElementById("completeName").textContent = student;
+  document.getElementById("completeTime").textContent = new Date().toLocaleString();
+  document.getElementById("code").textContent = makeCode();
+}
+
+function makeCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "U3W2-";
+  for(let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+</script>
+</body>
+</html>
